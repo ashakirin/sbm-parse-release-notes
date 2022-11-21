@@ -19,6 +19,11 @@ public class YamlBuilder {
             }
             String template = new String(templateStream.readAllBytes());
 
+            File targetDirectoryFile = new File(targetDirectory);
+            if (!targetDirectoryFile.exists()){
+                targetDirectoryFile.mkdirs();
+            }
+
             releaseItems.forEach(ri -> {
                 String filePath = createReleaseItemYaml(targetDirectory, template, ri);
                 ri.setFileName(filePath);

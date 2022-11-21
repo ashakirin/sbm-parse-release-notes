@@ -9,17 +9,17 @@ import java.util.*;
 public class ReleaseNotesMain {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 4) {
-            System.out.println("Please use following args: OUT_DIRECTORY GITHUB_USER GITHUB_TOKEN GITHUB_REPO");
+        if (args.length != 3) {
+            System.out.println("Please use following args: GITHUB_USER GITHUB_TOKEN GITHUB_REPO");
+            return;
         }
-        String targetDirectory = args[0];
-        String gitHubUser = args[1];
-        String gitHubToken = args[2];
-        String gitHubRepo = args[3];
+        String gitHubUser = args[0];
+        String gitHubToken = args[1];
+        String gitHubRepo = args[2];
 
         String currentPath = new java.io.File(".").getCanonicalPath();
-
         List<ReleaseItem> releaseItems = new ReleaseNotesParser().parse(currentPath + "/release-notes");
+        String targetDirectory = currentPath + "/target/generated-sources/sbm-reports";
         new YamlBuilder().buildYamls(targetDirectory, releaseItems);
 
         GitHubController gitHubController = new GitHubController(gitHubUser, gitHubToken, gitHubRepo);

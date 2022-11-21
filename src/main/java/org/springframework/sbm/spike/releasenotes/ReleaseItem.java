@@ -3,7 +3,6 @@ package org.springframework.sbm.spike.releasenotes;
 public class ReleaseItem {
     private final String title;
     private final String description;
-    private String filePath;
     private String fileName;
 
     public ReleaseItem(String versionPrefix, String content) {
