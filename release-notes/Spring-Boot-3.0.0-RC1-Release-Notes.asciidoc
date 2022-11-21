@@ -1,0 +1,204 @@
+:version: current-SNAPSHOT
+:docs: https://docs.spring.io/spring-boot/docs/{version}/reference/html
+:gradle-plugin-docs: https://docs.spring.io/spring-boot/docs/{version}/gradle-plugin/htmlsingle
+
+= Spring Boot 3.0.0 RC1 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+- link:Spring-Boot-3.0.0-M2-Release-Notes[v3.0.0 M2]
+- link:Spring-Boot-3.0.0-M3-Release-Notes[v3.0.0 M3]
+- link:Spring-Boot-3.0.0-M4-Release-Notes[v3.0.0 M4]
+- link:Spring-Boot-3.0.0-M5-Release-Notes[v3.0.0 M5]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+
+
+=== `server.max-http-header-size`
+Previously, the `server.max-http-header-size` was treated inconsistently across the four supported embedded web servers.
+When using Jetty, Netty, or Undertow it would configure the max HTTP request header size. When using Tomcat it would configure the max HTTP request and response header sizes.
+To address this inconsistency, `server.max-http-header-size` has been deprecated and a replacement, `server.max-http-request-header-size`, has been introduced.
+Both properties now only apply to the request header size, irrespective of the underlying web server.
+To limit the max header size of an HTTP response on Tomcat or Jetty (the only two servers that support such a setting), use a `WebServerFactoryCustomizer`.
+
+
+
+=== Updated Phases for Graceful Shutdown
+The phases used by the `SmartLifecycle` implementations for graceful shutdown have been updated.
+Graceful shutdown now begins in phase `SmartLifecycle.DEFAULT_PHASE - 2048` and the web server is stopped in phase `SmartLifecycle.DEFAULT_PHASE - 1024`.
+Any `SmartLifecycle` implementations that were participating in graceful shutdown should be updated accordingly.
+
+
+
+=== Configuring Gradle Tasks
+Spring Boot's Gradle tasks have been updated to consistently use Gradle's `Property` support for their configuration.
+As a result, you may need to change the way that you reference a property's value.
+For example, the value of the `imageName` property on `bootBuildImage` can now be accessed using `imageName.get()`.
+Additionally, if you are using the Kotlin DSL, you may need to change the way that you set properties.
+For, example in Spring Boot 2.x, layering of the `bootJar` task could be disabled as follows:
+
+[source,kotlin]
+----
+tasks.named<BootJar>("bootJar") {
+	layered {
+		isEnabled = false
+	}
+}
+----
+
+In 3.0, the following must be used:
+
+[source,kotlin]
+----
+tasks.named<BootJar>("bootJar") {
+	layered {
+		enabled.set(false)
+	}
+}
+----
+
+Please refer to the {gradle-plugin-docs}[Gradle plugin's reference documentation] for further examples.
+
+
+
+=== Excluding Properties From build-info.properties With Gradle
+As part of the previously described changes to configuring Gradle tasks, the mechanism for excluding properties from the generated `build-info.properties` file has also changed.
+Previously, properties could be excluded by setting them to `null`.
+This no longer works and has been replaced with a name-based mechanism:
+
+[source,groovy]
+----
+springBoot {
+	buildInfo {
+		excludes = ['time']
+	}
+}
+----
+
+The equivalent in the Gradle Kotlin DSL is as follows:
+
+[source,kotlin]
+----
+springBoot {
+	buildInfo {
+		excludes.set(setOf("time"))
+	}
+}
+----
+
+=== Minimum Requirements Changes
+None.
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-RC1-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+
+=== GraalVM Native Image Support
+This release represents the culmination of the efforts to support GraalVM native images in Spring Boot, Spring Framework, and the rest of the Spring portfolio. 
+See {docs}/native-image.html#native-image[the updated documentation] for more information on creating GraalVM native images with Spring Boot. 
+
+
+
+=== More Flexible Auto-configuration for Spring Data JDBC
+The auto-configuration for Spring Data JDBC is now more flexible.
+Several  auto-configured beans that are required by Spring Data JDBC are now conditional and can be replaced by defining a bean of the same type. The types of the beans that can now be replaced are the following:
+
+- `org.springframework.data.jdbc.core.JdbcAggregateTemplate`
+- `org.springframework.data.jdbc.core.convert.DataAccessStrategy`
+- `org.springframework.data.jdbc.core.convert.JdbcConverter`
+- `org.springframework.data.jdbc.core.convert.JdbcCustomConversions`
+- `org.springframework.data.jdbc.core.mapping.JdbcMappingContext`
+- `org.springframework.data.relational.RelationalManagedTypes`
+- `org.springframework.data.relational.core.dialect.Dialect`
+
+
+
+=== Support for Infinispan Reinstated
+With its 14.0 release, Infinispan has added support for Jakarta EE 9.
+As a result, we have been able to reinstate support for Infinispan.
+Please note that, where available, the `-jakarta` variant of Infinispan's modules should be used.
+
+
+
+=== Auto-Configuration for Prometheus Exemplars
+When there is a Micrometer Tracing `Tracer` bean and Prometheus is on the classpath, a `SpanContextSupplier` is now auto-configured.
+This supplier links metrics to traces by making the current trace ID and span ID available to Prometheus.
+
+
+
+=== Log4j2 Enhancements
+Log4j2 support has been updated with new extensions that provide the following functionality:
+
+* Profile-specific Configuration
+* Environment Properties Lookup
+* Log4j2 System Properties
+
+For details, please see the {docs}/features.html#features.logging.log4j2-extensions[updated documentation]
+
+
+
+=== Logback Configuration in a Native Image
+`logback.xml` and `logback-spring.xml` can now be used to configure logging in an application that is compiled to a GraalVM native image.
+
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-RC1 moves to new versions of several Spring projects:
+
+- https://github.com/spring-projects/spring-amqp/releases/tag/v3.0.0-RC1[Spring AMQP 3.0.0-RC1]
+- https://github.com/spring-projects/spring-batch/releases/tag/5.0.0-RC1[Spring Batch 5.0.0-RC1]
+- https://github.com/spring-projects/spring-data-commons/wiki/Spring-Data-2022.0-(Turing)-Release-Notes-(Preview)[Spring Data 2022.0.0-RC1]
+- https://github.com/spring-projects/spring-framework/releases/tag/v6.0.0-RC2[Spring Framework 6.0.0-RC2]
+- https://github.com/spring-projects/spring-graphql/releases/tag/v1.1.0-RC1[Spring GraphQL 1.1.0-RC1]
+- https://github.com/spring-projects/spring-hateoas/releases/tag/2.0.0-RC1[Spring HATEOAS 2.0.0-RC1]
+- https://github.com/spring-projects/spring-integration/releases/tag/v6.0.0-RC1[Spring Integration 6.0.0-RC1]
+- https://github.com/spring-projects/spring-kafka/releases/tag/v3.0.0-RC1[Spring Kafka 3.0.0-RC1]
+- https://github.com/spring-projects/spring-ldap/releases/tag/3.0.0-RC1[Spring LDAP 3.0.0-RC1]
+- https://github.com/spring-projects/spring-restdocs/releases/tag/v3.0.0-RC1[Spring REST Docs 3.0.0-RC1]
+- https://github.com/spring-projects/spring-retry/releases/tag/v2.0.0-RC1[Spring Retry 2.0.0-RC1]
+- https://github.com/spring-projects/spring-security/releases/tag/6.0.0-RC1[Spring Security 6.0.0-RC1]
+- https://github.com/spring-projects/spring-session-bom/wiki/Spring-Session-2022.0-Release-Notes-(preview)[Spring Session 2022.0.0-RC1]
+- Spring WS 4.0.0-RC1
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+- Flyway 9.5.0
+- Hibernate 6.1.4.Final 
+- Jackson 2.14.0-rc2
+- Jedis 4.3.0
+- Kafka 3.3.1
+- Kotlin 1.7.20
+- Lettuce 6.2.1.RELEASE
+- Liquibase 4.17.0
+- Log4j2 2.19.0
+- Logback 1.4.4
+- Micrometer 1.10.0-RC1
+- Micrometer Tracing 1.0.0-RC1
+- Mockito 4.8.1
+- MongoDB 4.8.0-beta0
+- Netty 4.1.84.Final
+- OpenTelemetry 1.19.0
+- SLF4J 2.0
+- SnakeYAML 1.33
+- Thymeleaf 3.1.0.RC1
+- Tomcat 10.0.27
+- Undertow 2.2.20.Final
+
+
+
+=== Miscellaneous
+Apart from the changes listed above, there have also been some minor tweaks and improvements including:
+
+- When using `spring-rabbit-stream`, a `RabbitStreamTemplate` and `Environment` will now be auto-configured whether or not `spring.rabbitmq.listener.type` is `stream`.
+
+
+
+== Deprecations in Spring Boot 3.0
+None.

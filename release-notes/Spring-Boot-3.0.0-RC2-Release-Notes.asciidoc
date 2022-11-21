@@ -1,0 +1,122 @@
+:version: 3.0.0-RC2
+:docs: https://docs.spring.io/spring-boot/docs/{version}/reference/html
+:actuator-api-docs: https://docs.spring.io/spring-boot/docs/{version}/actuator-api/htmlsingle
+:gradle-plugin-docs: https://docs.spring.io/spring-boot/docs/{version}/gradle-plugin/htmlsingle
+
+= Spring Boot 3.0.0 RC2 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+- link:Spring-Boot-3.0.0-M2-Release-Notes[v3.0.0 M2]
+- link:Spring-Boot-3.0.0-M3-Release-Notes[v3.0.0 M3]
+- link:Spring-Boot-3.0.0-M4-Release-Notes[v3.0.0 M4]
+- link:Spring-Boot-3.0.0-M5-Release-Notes[v3.0.0 M5]
+- link:Spring-Boot-3.0.0-RC1-Release-Notes[v3.0.0 RC1]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+
+=== Jakarta EE 10
+Following the https://tomcat.apache.org/tomcat-10.0-eol.html[end of life announcement for Apache Tomcat 10.0], we have upgraded from Jakarta EE 9 to Jakarta EE 10. Where Spring Boot depends upon a Jakarta EE specification, we now use the version that is included in Jakarta EE 10. For example, Spring Boot 3.0 uses the Servlet 6.0 and JPA 3.1 specifications by default. Jakarta EE 9 is still supported and a war-packaged Spring Boot application can be deployed to an EE 9 environment.
+
+
+
+=== Jetty
+Jetty does not yet support Servlet 6.0. To use Jetty with Spring Boot 3.0, you will have to downgrade the Servlet API to 5.0. You can use the `jakarta-servlet.version` property to do so.
+
+
+
+=== Dependency Management for Hazelcast Hibernate Removed
+Spring Boot does not depend on Hazelcast Hibernate so it need not have an opinion about its version.
+As such, dependency management for Hazelcast Hibernate has been removed.
+If you wish to continue using Hazelcast Hibernate, specify a version that meets your needs.
+Alternatively, consider using `org.hibernate.orm:hibernate-jcache` instead.
+
+
+
+=== `httptrace` Endpoint Renamed to `httpexchanges`
+The `httptrace` endpoint and related infrastructure records and provides access to information about recent HTTP request-response exchanges.
+Following the introduction of support for https://micrometer.io/docs/tracing[Micrometer Tracing], the name `httptrace` may cause confusion.
+To reduce this possible confusion the endpoint has been renamed to `httpexchanges`. The contents of the endpoint's response has also been affected by this renaming. Please refer to the {actuator-api-docs}/#httpexchanges[Actuator API documentation] for further details.
+
+Related infrastructure classes have also been renamed.
+For example, `HttpTraceRepository` is now named `HttpExchangeRepository` and can be found in the `org.springframework.boot.actuate.web.exchanges` package.
+
+
+=== Actuator JSON
+Responses from the actuator endpoints shipped with Spring Boot now use an isolated `ObjectMapper` instance to ensure results are consistent.
+If you want to revert to the old behavior and use the application `ObjectMapper` you can set `management.endpoints.jackson.isolated-object-mapper` to `false`.
+
+If you have developed your own endpoints, you might want to ensure that responses implement the `OperationResponseBody` interface.
+This will ensure that the isolated `ObjectMapper` is considered when serializing the response as JSON.
+
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-RC2-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+
+=== GraalVM
+Spring Boot now requires Graal 22.3 or later and Native Build Tools Plugin 0.9.17 or later
+
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-RC2 moves to new versions of several Spring projects:
+
+- Spring Batch 5.0.0-RC2
+- Spring Data 2022.0.0-RC2
+- Spring Framework 6.0.0-RC4
+- Spring Integration 6.0.0-RC2
+- Spring Kafka 3.0.0-RC2
+- Spring Security 6.0.0-RC2
+- Spring Session 3.0.0-RC2
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+- Couchbase Client 3.4
+- Elasticsearch Client 8.5
+- Glassfish JAXB 4.0
+- Glassfish JSTL 3.0
+- Hibernate Validator 8.0
+- Jackson 2.14
+- Jakarta Activation 2.1
+- Jakarta Json 2.1
+- Jakarta Json Bind 3.0
+- Jakarta Mail 2.1
+- Jakarta Persistence 3.1
+- Jakarta Servlet 6.0
+- Jakarta Servlet JSP JSTL 3.0
+- Jakarta XML Bind 4.0
+- Jakarta XML SOAP 3.0
+- Jakarta XML WS 4.0
+- Jakarta WebSocket 2.1
+- Jakarta WS RS 3.1
+- Jersey 3.1
+- Micrometer 1.10
+- Micrometer Tracing 1.0
+- Neo4j Java Driver 5.2
+- Reactor 2022.0
+- SAAJ Implements 3.0
+- Tomcat 10.1
+- Undertow 2.3
+- Yasson 3.0
+
+
+
+=== Miscellaneous
+Apart from the changes listed above, there have also been some minor tweaks and improvements including:
+
+- `SpanCustomizer` beans for Brave and OpenTelemetry are now auto-configured.
+- Host names are no longer logged during application startup. This prevents a network lookup which helps improve startup times.
+- Bean implementing the `MeterBinder` interface are now bound to meter registries only after all singleton beans have been initialized.
+
+
+
+== Deprecations in Spring Boot 3.0
+None.

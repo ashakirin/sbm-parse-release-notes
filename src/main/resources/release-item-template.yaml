@@ -1,0 +1,17 @@
+# ===================
+# Generated
+# ===================
+- title: --TITLE--
+  helper: AlwaysTheSameDefaultHelperReturningTrue
+  change: |-
+    --DESCRIPTION--
+  affected: |-
+    Actually, we don't know if the application is really affected. But please think about contributing.
+    Have a look into issue --GH-ISSUE--
+  remediation:
+    description: |-
+      See affected
+  projects: spring-boot
+  gitHubIssue: #--GH-ISSUE-NUMBER-
+  contributors:
+    - Here might be YOUR name!

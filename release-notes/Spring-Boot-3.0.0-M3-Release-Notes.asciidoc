@@ -1,0 +1,145 @@
+= Spring Boot 3.0.0 M3 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+- link:Spring-Boot-3.0.0-M2-Release-Notes[v3.0.0 M2]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+
+
+=== Minimum Requirements Changes
+None.
+
+
+
+=== Actuator Metrics Export Properties
+We have moved the properties controlling the https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#actuator.metrics[actuator metrics export]. The old schema was `management.metrics.export.<product>`, the new one is `management.<product>.metrics.export` (Example: the prometheus properties moved from `management.metrics.export.prometheus` to `management.prometheus.metrics.export`). If you are using the `spring-boot-properties-migrator`, you will get notified at startup. See https://github.com/spring-projects/spring-boot/issues/30381[#30381] for details.
+
+
+
+=== Simplifed Main Class Name Resolution with Gradle
+When building an application with Gradle, resolution of the name of the application's main class has been simplified and made consistent.
+`bootJar`, `bootRun`, and `bootWar` now all resolve the name of the main class name by looking for it in the output of the main source set.
+This removes a small risk that the tasks may not have used the same main class name by default.
+If you were relying on the main class being resolved from a location outside of the main source set's output, update your Gradle configuration to configure the main class name using the `mainClass` property of the `springBoot` DSL:
+
+----
+springBoot {
+    mainClass = "com.example.Application"
+}
+----
+
+Alternatively, you can configure the `classpath` property of the `resolveMainClassName` task to search in locations other than the main source set's output directories.
+
+
+=== Running Your Application in the Maven Process
+The `fork` attribute of `spring-boot:run` and `spring-boot:start` that was deprecated in Spring Boot 2.7 has been removed.
+
+
+=== SAML2 Relying Party Configuration
+Support for properties under `spring.security.saml2.relyingparty.registration.{id}.identity-provider` have been removed. Use the new properties under `spring.security.saml2.relyingparty.registration.{id}.asserting-party` as a replacement.
+
+
+=== Embedded MongoDB 
+Auto-configuration and dependency management for Flapdoodle embedded MongoDB has been removed. If you are using embedded MongoDB for testing, use the auto-configuration library provided by the https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo.spring[Flapdoodle project] or modify the tests to use the https://www.testcontainers.org/[Testcontainers] project instead of embedded MongoDB. 
+
+=== Logging Date Format
+The default format for the date and time component of log messages for Logback and Log4j2 has changed to align with the ISO-8601 standard.
+The new default format `yyyy-MM-dd'T'HH:mm:ss.SSSXXX` uses a `T` to separate the date and time instead of a space character and adds the timezone offset to the end. The `LOG_DATEFORMAT_PATTERN` environment variable or `logging.pattern.dateformat` property can be used to restore the previous default value of `yyyy-MM-dd HH:mm:ss.SSS`.
+
+
+
+=== Support for Apache Solr Removed
+Support for Apache Solr has been removed as its Jetty-based client, `Http2SolrClient`, is not compatible with Jetty 11.
+
+
+
+=== Auto-configuration of Micrometer's JvmInfoMetrics
+Micrometer's `JvmInfoMetrics` is now auto-configured. Any manually configured `JvmInfoMetrics` bean definition can be removed.
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-M3-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+
+=== Reinstated Support for REST Assured
+With its 5.0 release, REST Assured is compatible with Jakarta EE 9 and Groovy 4.0. As a result, support has been reinstated.
+
+
+
+=== Reinstated Support for Pooled JMS
+With its 5.0 release, Pooled JMS is compatible with Jakarta EE 9. As a result, support has been reinstated and can be used with Apache Artemis by setting `spring.artemis.pool.enabled` to `true`.
+
+
+=== Auto-configuration for Micrometer Observation API
+
+Spring Boot now auto-configures an instance of `ObservationRegistry` for you. If `micrometer-core` is on the classpath, a `TimerObservationHandler` is registered on the `ObservationRegistry`, which means that every stopped `Observation` leads to a timer. `ObservationPredicate`, `GlobalTagsProvider` and `ObservationHandler` are automatically registered on the `ObservationRegistry`. You can use `ObservationRegistryCustomizer` to further customize the `ObservationRegistry` if you need to. See https://github.com/spring-projects/spring-boot/issues/29666[#29666] for details.
+
+=== Auto-configuration for Micrometer Tracing
+
+Spring Boot now auto-configures https://micrometer.io/docs/tracing[Micrometer Tracing] for you. This includes support for Brave, OpenTelemetry, Zipkin and Wavefront. When using the Micrometer Observation API, finishing observations will lead to spans reported to Zipkin or Wavefront. Tracing can be controlled with properties under `management.tracing`. Zipkin can be configured with `management.zipkin.tracing`, while Wavefront uses `management.wavefront`. To use, for example Wavefront with Brave, these dependencies are needed:
+
+----
+implementation 'org.springframework.boot:spring-boot-starter-actuator'
+implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+implementation 'io.micrometer:micrometer-tracing-reporter-wavefront'
+----
+
+
+
+
+=== Auto-configuration for Micrometer's OtlpMeterRegistry
+An `OtlpMeterRegistry` is now auto-configured when `io.micrometer:micrometer-registry-otlp` is on the classpath.
+The meter registry can be configured using `management.otlp.metrics.export.*` properties.
+
+
+
+=== Enabling Async Acks with Apache Kafka
+A new configuration property, `spring.kafka.listener.async-acks`, for enabling async acks with Kafka has been added.
+To enable async acks, set the property to `true`.
+The property only applies when `spring.kafka.listener.async-mode` is set to `manual` or `manual-immediate`.
+
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-M3 moves to new versions of several Spring projects:
+
+* https://github.com/spring-projects/spring-amqp/releases/tag/v3.0.0-M3[Spring AMQP 3.0.0-M3]
+* https://github.com/spring-projects/spring-batch/releases/tag/5.0.0-M3[Spring Batch 5.0.0-M3]
+* Spring Data 2022.0.0-M4
+* https://github.com/spring-projects/spring-hateoas/releases/tag/2.0.0-M3[Spring HATEOAS 2.0.0-M3]
+* https://github.com/spring-projects/spring-integration/releases/tag/v6.0.0-M3[Spring Integration 6.0.0-M3]
+* https://github.com/spring-projects/spring-kafka/releases/tag/v3.0.0-M4[Spring Kafka 3.0.0-M4]
+* https://github.com/spring-projects/spring-restdocs/releases/tag/v3.0.0-M3[Spring REST Docs 3.0.0-M3]
+* https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M5[Spring Security 6.0.0-M5] (see also https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M4[6.0.0-M4])
+
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+* Flyway 8.5.11
+* Hibernate 5.6.9.Final
+* Micrometer 1.10.0-M2
+* Micrometer Tracing 1.0.0-M5
+* Netty 4.1.77.Final
+* Reactor Bom 2022.0.0-M2
+* Thymeleaf 3.1.0.M2
+* Tomcat 10.0.21 
+
+
+
+=== Miscellaneous
+Apart from the changes listed above, there have also been some minor tweaks and improvements including:
+
+* Bean Validation `Configuration` can now be customised by defining a `ValidationConfigurationCustomizer` bean.
+* Log4j2's `Log4jBridgeHandler` is now used to route JUL-based logging into Log4j2 rather than routing through SLF4J.
+
+
+
+== Deprecations in Spring Boot 3.0
+* The properties `management.metrics.export.<product>` are deprecated, the replacement is `management.<product>.metrics.export`. See above for more details.

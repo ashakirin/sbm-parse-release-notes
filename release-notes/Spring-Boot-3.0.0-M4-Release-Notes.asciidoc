@@ -1,0 +1,205 @@
+:docs: https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/html
+
+= Spring Boot 3.0.0 M4 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+- link:Spring-Boot-3.0.0-M2-Release-Notes[v3.0.0 M2]
+- link:Spring-Boot-3.0.0-M3-Release-Notes[v3.0.0 M3]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+
+=== Spring MVC and WebFlux URL matching changes
+
+As of Spring Framework 6.0, the trailing slash matching configuration option has been deprecated and its default value set to `false`.
+This means that previously, the following controller would match both "GET /some/greeting" and "GET /some/greeting/":
+
+```
+@RestController
+public class MyController {
+
+  @GetMapping("/some/greeting")
+  public String greeting {
+    return "Hello";
+  } 
+
+}
+```
+
+As of https://github.com/spring-projects/spring-framework/issues/28552[this Spring Framework change], "GET /some/greeting/" doesn't
+match anymore by default.
+
+Developers should instead configure explicit redirects/rewrites through a proxy, a Servlet/web filter, or even declare the additional route explicitly on the controller handler (like `@GetMapping("/some/greeting", "/some/greeting/")` for more targeted cases.
+
+Until your application fully adapts to this change, you can change the default with the following global configuration:
+
+```
+@Configuration
+public class WebConfiguration implements WebMvcConfigurer {
+
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+      configurer.setUseTrailingSlashMatch(true);
+    }
+  
+}
+```
+
+=== Hibernate 6.1
+Spring Boot 3.0 uses Hibernate 6.1 by default.
+Please see the Hibernate https://docs.jboss.org/hibernate/orm/6.0/migration-guide/migration-guide.html[6.0] and https://docs.jboss.org/hibernate/orm/6.1/migration-guide/migration-guide.html[6.1] migration guides to learn how this may affect your application.
+
+Dependency management and the `spring-boot-starter-data-jpa` starter have been updated to use the new `org.hibernate.orm` group ID for their Hibernate dependencies.
+
+The `spring.jpa.hibernate.use-new-id-generator-mappings` configuration property has been removed as Hibernate no longer supports switching back to the old ID generator mappings.
+
+
+
+=== Flyway 9.0
+Spring Boot 3.0 uses Flyway 9.0 by default. Please see the Flyway https://flywaydb.org/documentation/learnmore/releaseNotes#9.0.0[release notes] and https://flywaydb.org/blog/version-9-is-coming-what-developers-need-to-know[blog post] to learn how this may affect your application.
+
+
+
+=== R2DBC 1.0
+Spring Boot 3.0 uses R2DBC 1.0 by default.
+With the 1.0 release, R2DBC no longer publishes a bill of materials (bom) which has affected Spring Boot's dependency management.
+The `r2dbc-bom.version` can no longer be used to override R2DBC's version.
+In its place, several new properties for the individual and separately versioned modules are now available:
+
+- `oracle-r2dbc.version` (`com.oracle.database.r2dbc:oracle-r2dbc`)
+- `r2dbc-h2.version` (`io.r2dc:r2dbc-h2`)
+- `r2dbc-pool.version` (`io.r2dc:r2dbc-pool`)
+- `r2dbc-postgres.version` (`io.r2dc:r2dbc-postgres`)
+- `r2dbc-proxy.version` (`io.r2dc:r2dbc-proxy`)
+- `r2dbc-spi.version` (`io.r2dc:r2dbc-spi`)
+
+
+
+=== Elasticsearch Clients and Templates
+Support for Elasticsearch's high-level REST client has been removed.
+In its place, auto-configuration for Elasticsearch's new Java client has been introduced.
+Similarly, support for the Spring Data Elasticsearch templates that built on top of the high-level REST client has been removed.
+In its place, auto-configuration for the new templates that build upon the new Java client has been introduced.
+See {docs}/data.html#data.nosql.elasticsearch[the Elasticsearch section of the reference documentation] for further details.
+
+
+
+=== ReactiveElasticsearchRestClientAutoConfiguration
+`ReactiveElasticsearchRestClientAutoConfiguration` has been renamed to `ReactiveElasticsearchClientAutoConfiguration` and has moved from `org.springframework.boot.autoconfigure.data.elasticsearch` to `org.springframework.boot.autoconfigure.elasticsearch`. Any auto-configuration exclusions or ordering should be updated accordingly.
+
+
+
+=== YamlJsonParser Has Been Removed
+`YamlJsonParser` has been removed as SnakeYAML's JSON parsing was inconsistent with the other parser implementations.
+In the unlikely event that you were using `YamlJsonParser` directly, please migrate to one of the other `JsonParser` implementations.
+
+
+
+=== ReactiveUserDetailsService
+A `ReactiveUserDetailsService` is no longer auto-configured in the presence of an `AuthenticationManagerResolver`.
+If you application relies on `ReactiveUserDetailService` despite the presence of an `AuthenticationManagerResolver`, define your own `ReactiveUserDetailsService` bean that meets its needs.
+
+
+
+=== Multiple Batch Jobs
+Running multiple batch jobs is no longer supported. 
+If the auto-configuration detects a single job is, it will be executed on startup.
+If multiple jobs are found in the context, a job name to execute on startup must be supplied by the user using the `spring.batch.job.name` property.
+
+
+
+=== Spring Session Store Type
+Explicitly configuring the store type for Spring session via `spring.session.store-type` is no longer supported.
+In case multiple session store repository implementations are detected on the classpath, a {docs}/web.html#web.spring-session[fixed order] is used to determine which `SessionRepository` should be auto-configured.
+If Spring Boot's defined ordering doesn't meet your needs, you can define your own SessionRepository bean and cause the auto-configuration to back off.
+
+
+
+=== Minimum Requirements Changes
+Spring Boot 3.0.0-M4 makes the following changes to the minimum supported versions:
+
+- Gradle 7.5
+- Hibernate 6.1
+- Kotlin 1.7
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-M4-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+=== Native Image support
+More use cases are supported in this milestone, including the actuator (including the use of a separate management context).
+
+
+
+=== Making a PUT to Prometheus Push Gateway on Shutdown
+The Push Gateway can be configured to https://github.com/prometheus/pushgateway#put-method[perform a `PUT` on shutdown].
+To do so, set `management.prometheus.metrics.export.pushgateway.shutdown-operation` to `put`.
+Additionally, the existing `push` setting has been deprecated and `post` should now be used instead.
+
+
+
+=== Hibernate Metrics Auto-configuration Reinstated
+With the upgrade to Hibernate 6.1, its `hibernate-micrometer` module is now compatible with Jakarta EE 9. As a result, auto-configuration for Hibernate metrics has been reinstated.
+
+
+
+=== Elasticsearch Java Client
+Auto-configuration for the https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/8.3/index.html[new Elasticsearch Java Client] has been introduced.
+It can be configured using the existing `spring.elasticsearch.*` configuration properties.
+
+
+
+=== Auto-configuration of JdkClientHttpConnector
+In the absence of Reactor Netty, Jetty's reactive client, and the Apache HTTP client a `JdkClientHttpConnector` will now be auto-configured.
+This allows `WebClient` to be used with the JDK's `HttpClient`.
+
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-M4 moves to new versions of several Spring projects:
+
+* https://github.com/spring-projects/spring-batch/releases/tag/5.0.0-M4[Spring Batch 5.0.0-M4]
+* https://github.com/spring-projects/spring-data-commons/wiki/Spring-Data-2022.0-(Turing)-Release-Notes-(Preview)[Spring Data 2022.0.0-M5]
+* https://github.com/spring-projects/spring-framework/releases/tag/v6.0.0-M5[Spring Framework 6.0.0-M5]
+* https://github.com/spring-projects/spring-hateoas/releases/tag/2.0.0-M4[Spring HATEOAS 2.0.0-M5]
+* https://github.com/spring-projects/spring-integration/releases/tag/v6.0.0-M4[Spring Integration 6.0.0-M4]
+* https://github.com/spring-projects/spring-kafka/releases/tag/v3.0.0-M5[Spring Kafka 3.0.0-M5]
+* https://github.com/spring-projects/spring-restdocs/releases/tag/v3.0.0-M4[Spring REST Docs 3.0.0-M4]
+* https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M6[Spring Security 6.0.0-M6]
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+* https://flywaydb.org/documentation/learnmore/releaseNotes#9.0.0[Flyway 9]
+* https://in.relation.to/2022/06/24/hibernate-orm-61-features/[Hibernate 6.1]
+* https://docs.liquibase.com/release-notes/home.html[Liquibase 4.13]
+* https://github.com/lettuce-io/lettuce-core/releases/tag/6.2.0.RELEASE[Lettuce 6.2]
+* https://logging.apache.org/log4j/2.x/changes-report.html#a2.18.0[Log4j 2.18]
+* https://github.com/micrometer-metrics/micrometer/releases/tag/v1.10.0-M3[Micrometer 1.10.0-M3]
+* https://github.com/micrometer-metrics/tracing/releases/tag/v1.0.0-M6[Micrometer Tracing 1.0.0-M6]
+* https://square.github.io/okhttp/changelogs/changelog_4x/#version-4100[OkHttp 4.10]
+* https://r2dbc.io/2022/04/25/r2dbc-1.0-goes-ga[R2DBC 1.0]
+* https://github.com/reactor/reactor/releases/tag/2022.0.0-M4[Reactor 2022.0.0-M4]
+
+
+
+=== Miscellaneous
+Apart from the changes listed above, there have also been some minor tweaks and improvements including:
+
+* Micrometer's `JvmCompilationMetrics` are now auto-configured.
+* `WebDriverScope` and `WebDriverTestExecutionListener` have been made public to ease the use of `WebDriver` in custom test setup.
+* A `DataSourceBuilder` can now be derived from a wrapped `DataSource`.
+* Existing Kafka topics can be modified using `spring.kafka.admin.modify-topic-configs`.
+* Trusted proxies of Tomcat's remote IP valve can be configured using `server.tomcat.remoteip.trusted-proxies`.
+
+
+
+== Deprecations in Spring Boot 3.0
+
+* The `push` setting of `management.prometheus.metrics.export.pushgateway.shutdown-operation` in favor of `post`.
+* `@AutoConfigureMetrics` has been deprecated in favor of `@AutoConfigureObservability`.

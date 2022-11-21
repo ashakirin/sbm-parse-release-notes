@@ -1,0 +1,154 @@
+:docs: https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/html
+
+= Spring Boot 3.0.0 M5 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+- link:Spring-Boot-3.0.0-M2-Release-Notes[v3.0.0 M2]
+- link:Spring-Boot-3.0.0-M3-Release-Notes[v3.0.0 M3]
+- link:Spring-Boot-3.0.0-M4-Release-Notes[v3.0.0 M4]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+=== Changes to Data properties
+The `spring.data` prefix has been reserved for Spring Data and any properties under the prefix imply that Spring Data is required on the classpath.  
+
+==== Cassandra Properties
+Configuration Properties for Cassandra have moved from `spring.data.cassandra.*` to `spring.cassandra.*`.
+
+==== Redis Properties
+Configuration Properties for Redis have moved from `spring.redis.*` to `spring.data.redis.*` as redis auto-configuration requires Spring Data to be present on the classpath.
+
+
+=== JMX Endpoint Exposure
+By default, only the health endpoint is now exposed over JMX, to align with the default web endpoint exposure.
+This can be changed by configuring the `management.endpoints.jmx.exposure.include` and `management.endpoints.jmx.exposure.exclude` properties.
+
+
+
+=== Actuator Endpoints Sanitization
+Since, the `/env` and `/configprops` endpoints can contains sensitive values, all values are always masked by default.
+This used to be case only for keys considered to be sensitive.
+
+Instead, this release opts for a more secure default. 
+The keys-based approach has been removed in favor of a role based approach, similar to the health endpoint details.
+Whether unsanitized values are shown or not can be configured using a property which can have the following values:
+
+- `NEVER` - All values are sanitized.
+- `ALWAYS` - All values are present in the output (sanitizing functions will apply).
+- `WHEN_AUTHORIZED` - Values are present in the output only if a user is authorized (sanitizing functions will apply).
+
+For JMX, users are always considered to be authorized. For HTTP, users are considered to be authorized if they are authenticated and have the specified roles.
+
+Sanitization for the QuartzEndpoint is also configurable in the same way.
+
+=== Dependency Management for ANTLR 2 Removed
+Dependency management for ANTLR 2 (`antlr:antlr`) has been removed as it was no longer required.
+If you are using ANTLR 2 in your application, specify a version that meets your needs.
+
+
+
+=== Flyway Configuration Customization
+`FlywayConfigurationCustomizer` beans are now called to customize the `FluentConfiguration` after any `Callback` and `JavaMigration` beans
+have been added to the configuration. An application that defines `Callback` and `JavaMigration` beans and adds callbacks and Java migrations using a customizer may have to be updated to ensure that the intended callbacks and Java migrations are used.
+
+
+
+=== `@EnableBatchProcessing` No Longer Required
+Previously, `@EnableBatchProcessing` could be used to enable Spring Boot's auto-configuration of Spring Batch.
+It is no longer required and should be removed from applications that want to use Boot's auto-configuration.
+A bean that is annotated with `@EnableBatchProcessing` or that extends Batch's `DefaultBatchConfiguration` can now be defined to tell the auto-configuration to back off, allowing the application to take complete control of how Batch is configured.
+
+
+
+=== Mongo Health Check
+The `HealthIndicator` for MongoDB now supports MongoDB's Stable API.
+The `buildInfo` query has been replaced with `isMaster` and the response now contains `maxWireVersion` instead of `version`.
+As described in the https://www.mongodb.com/docs/v4.2/reference/command/isMaster/[MongoDB documentation], clients may use `maxWireVersion` to help negotiate compatibility with MongoDB. 
+Note that `maxWireVersion` is an integer.
+ 
+
+=== Auto-configuration Registration
+Spring Boot 2.7 https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.7-Release-Notes#changes-to-auto-configuration[introduced] a new `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` file for registering auto-configurations, while maintaining backwards compatibility with registration in `spring.factories`. With this release, support for registering auto-configurations in `spring.factories` has been removed in favor of the imports file. 
+
+
+=== Minimum Requirements Changes
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-M5-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+
+=== Native Support
+This milestone brings a number of improvements and compatibility for building an application as a Native image:
+
+* Hints for the default LDIF file is contributed.
+* The Maven `native` profile now longer sets a classifier for the repackaged archive.
+* Native testing is now supported.
+
+
+=== Jersey Support Reinstated
+In its 3.0.6 release, Jersey now supports Spring Framework 6. As a result, support for Jersey has been reinstated both for application code and actuator web endpoints.
+
+
+
+=== @SpringBootTest with Main Methods
+The `@SpringBootTest` annotation can now use the `main` of any discovered `@SpringBootConfiguration` class if it's available.
+This means that any custom `SpringApplication` configuration performed by your main method can now be picked up by tests.
+
+To use the `main` method for a test set the `useMainMethod` attribute of `@SpringBootTest` to `UseMainMethod.ALWAYS` or `UseMainMethod.WHEN_AVAILABLE`.
+
+See the updated reference documentation for details.
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-M5 moves to new versions of several Spring projects:
+
+- https://github.com/spring-projects/spring-amqp/releases/tag/v3.0.0-M4[Spring AMQP 3.0.0-M4]
+- https://github.com/spring-projects/spring-batch/releases/tag/5.0.0-M6[Spring Batch 5.0.0-M6]
+- Spring Data 2022.0.0-M6
+- https://github.com/spring-projects/spring-framework/releases/tag/v6.0.0-M6[Spring Framework 6.0.0-M6]
+- https://github.com/spring-projects/spring-graphql/releases/tag/v1.1.0-M1[Spring GraphQL 1.1.0-M1]
+- https://github.com/spring-projects/spring-hateoas/releases/tag/2.0.0-M6[Spring HATEOAS 2.0.0-M6]
+- https://github.com/spring-projects/spring-integration/releases/tag/v6.0.0-M5[Spring Integration 6.0.0-M5]
+- https://github.com/spring-projects/spring-kafka/releases/tag/v3.0.0-M6[Spring Kafka 3.0.0-M6]
+- https://github.com/spring-projects/spring-ldap/releases/tag/3.0.0-M4[Spring LDAP 3.0.0-M4]
+- https://github.com/spring-projects/spring-retry/releases/tag/v2.0.0-M1[Spring Retry 2.0.0-M1]
+- https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M7[Spring Security 6.0.0-M7]
+- https://github.com/spring-projects/spring-session-bom/wiki/Spring-Session-2022.0.0-M3-Release-Notes[Spring Session 2022.0.0-M3]
+
+
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+- SnakeYAML 1.32
+- GraphQL Java 19.2
+- Postgresql 42.5
+- Maven Jar Plugin 3.3.0
+- Selenium 4.4.0
+- Selenium HtmlUnit 3.64.0
+- REST Assured 5.2.0
+- Rabbit AMQP Client 5.16.0
+- Rabbit Stream Client 0.7.0
+- Maven Shade Plugin 3.4.0
+- Mockito 4.8.0
+
+
+
+=== Miscellaneous
+Apart from the changes listed above, there have also been some minor tweaks and improvements including:
+
+* Multiple hosts can now be configured for MongoDB using the `spring.data.mongodb.additional-hosts` property.
+* `DiskSpaceHealthIndicator` now includes its path in its log message and its health details.
+* WebJars resource handler path pattern can be customized using `spring.mvc.webjars-path-pattern` or `spring.webflux.webjars-path-pattern`.
+* Elasticsearch's socketKeepAlive property can be configured using the `spring.elasticsearch.socket-keep-alive` property.
+* The `spring.mvc.ignore-default-model-on-redirect` has been deprecated to align with upstream Spring Framework changes.
+
+== Deprecations in Spring Boot 3.0
+
+

@@ -1,0 +1,90 @@
+= Spring Boot 3.0.0 M2 Release Notes
+
+For changes in earlier milestones, please refer to:
+
+- link:Spring-Boot-3.0.0-M1-Release-Notes[v3.0.0 M1]
+
+
+
+== Upgrading from Spring Boot 2.x
+
+
+=== Minimum Requirements Changes
+
+Spring Boot 3.0 M2 makes the following changes to its minimum supported versions:
+
+- Groovy 4.0
+
+
+
+=== RxJava Dependency Management
+Dependency management for RxJava 1.x and 2.x has been removed and dependency management for RxJava 3 has been added in its place.
+
+
+
+=== Image Banner Support Removed
+Support for image-based application banners has been removed. `banner.gif`, `banner.jpg`, and `banner.png` files are now ignored and should be replaced with a text-based `banner.txt` file.
+
+
+
+=== Micrometer binders
+The Micrometer team moved the binders to a separate micrometer module named `micrometer-binders`. To prevent split packages, the imports have changed, too. If you are using the old binders, please adjust your imports from `io.micrometer.core.instrument.binder` to `io.micrometer.binder`.
+
+
+
+=== @ConstructingBinding No Longer Needed at the Type Level
+`@ConstructorBinding` is no longer needed at the type level on `@ConfigurationProperties` classes and should be removed.
+When a class or record has multiple constructors, it may still be used on a constructor to indicate which one should be used for property binding.
+
+
+
+== New and Noteworthy
+TIP: Check link:Spring-Boot-3.0.0-M2-Configuration-Changelog[the configuration changelog] for a complete overview of the changes in configuration.
+
+
+
+=== Reinstated Support for EhCache 3
+Support for EhCache 3 has been reinstated as it is now compatible with Jakarta EE 9.
+
+Support has been added in a separate artifact.
+To use it your application, make sure to add the dependency with the `jakarta` classifier.
+
+
+
+=== Reinstated Support for H2 Console
+Support for H2's Console has been reinstated as it is now compatible with Jakarta EE 9.
+
+
+=== Improved @ConstructorBinding Detection
+When using constructor bound `@ConfigurationProperties` the `@ConstructorBinding` annotation is no longer required if the class has a single parameterized constructor.
+If you have more than one constructor, you'll still need to use `@ConstructorBinding` to tell Spring Boot which one to use.
+
+For most users, this updated logic will allow for simpler `@ConfigurationProperties` classes.
+If, however, you have a `@ConfigurationProperties` and you want to inject beans into the constructor rather than binding it, you'll now need to add an `@Autowired` annotation.
+
+
+
+
+=== Dependency Upgrades
+Spring Boot 3.0.0-M2 moves to new versions of several Spring projects:
+
+* https://github.com/spring-projects/spring-amqp/releases/tag/v3.0.0-M2[Spring AMQP 3.0.0-M2]
+* https://github.com/spring-projects/spring-batch/releases/tag/5.0.0-M2[Spring Batch 5.0.0-M2]
+* Spring Data 2022.0.0-M3
+* https://github.com/spring-projects/spring-hateoas/releases/tag/2.0.0-M2[Spring HATEOAS 2.0.0-M2]
+* https://github.com/spring-projects/spring-integration/releases/tag/v6.0.0-M2[Spring Integration 6.0.0-M2]
+* https://github.com/spring-projects/spring-kafka/releases/tag/v3.0.0-M3[Spring Kafka 3.0.0-M3]
+* https://github.com/spring-projects/spring-restdocs/releases/tag/v3.0.0-M2[Spring REST Docs 3.0.0-M2]
+* https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M3[Spring Security 6.0.0-M3] (see also https://github.com/spring-projects/spring-security/releases/tag/6.0.0-M2[6.0.0-M2])
+* Spring WS 4.0.0-M2
+
+Numerous third-party dependencies have also been updated, some of the more noteworthy of which are the following:
+
+* Groovy 4.0
+* Thymeleaf Layout Dialect 3.1
+
+
+
+== Deprecations in Spring Boot 3.0
+
+* None
