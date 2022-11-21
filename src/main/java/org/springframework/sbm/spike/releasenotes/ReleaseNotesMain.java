@@ -16,19 +16,21 @@ public class ReleaseNotesMain {
         String gitHubUser = args[1];
         String gitHubToken = args[2];
         String gitHubRepo = args[3];
+
         String currentPath = new java.io.File(".").getCanonicalPath();
+
         List<ReleaseItem> releaseItems = new ReleaseNotesParser().parse(currentPath + "/release-notes");
         new YamlBuilder().buildYamls(targetDirectory, releaseItems);
 
         GitHubController gitHubController = new GitHubController(gitHubUser, gitHubToken, gitHubRepo);
-        releaseItems.forEach(ri -> {
-            try {
+        try {
+            for (ReleaseItem ri : releaseItems) {
                 IssueIdentifier id = gitHubController.createIssue("ReleaseNotes: " + ri.getTitle(), ri.getDescription(), gitHubUser, List.of("SBM", "ReleaseNotes"));
                 new YamlBuilder().updateAndRenameWithIssueId(targetDirectory, ri, id);
-                System.out.println("Created: " + ri.getTitle() + "with id:" + id.getUrl());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                System.out.println("Created: " + ri.getTitle() + " with id:" + id.getUrl());
             }
-        });
+        } finally {
+            gitHubController.shutdown();
+        }
     }
 }
