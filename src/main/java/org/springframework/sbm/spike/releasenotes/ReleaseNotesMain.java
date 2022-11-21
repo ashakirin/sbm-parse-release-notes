@@ -13,17 +13,17 @@ public class ReleaseNotesMain {
             System.out.println("Please use following args: OUT_DIRECTORY GITHUB_USER GITHUB_TOKEN GITHUB_REPO");
         }
         String targetDirectory = args[0];
-        String user = args[1];
-        String token = args[2];
-        String repo = args[3];
+        String gitHubUser = args[1];
+        String gitHubToken = args[2];
+        String gitHubRepo = args[3];
         String currentPath = new java.io.File(".").getCanonicalPath();
         List<ReleaseItem> releaseItems = new ReleaseNotesParser().parse(currentPath + "/release-notes");
         new YamlBuilder().buildYamls(targetDirectory, releaseItems);
 
-        GitHubController gitHubController = new GitHubController(user, token, repo);
+        GitHubController gitHubController = new GitHubController(gitHubUser, gitHubToken, gitHubRepo);
         releaseItems.forEach(ri -> {
             try {
-                IssueIdentifier id = gitHubController.createIssue("ReleaseNotes: " + ri.getTitle(), ri.getDescription(), user, List.of("SBM", "ReleaseNotes"));
+                IssueIdentifier id = gitHubController.createIssue("ReleaseNotes: " + ri.getTitle(), ri.getDescription(), gitHubUser, List.of("SBM", "ReleaseNotes"));
                 new YamlBuilder().updateAndRenameWithIssueId(targetDirectory, ri, id);
                 System.out.println("Created: " + ri.getTitle() + "with id:" + id.getUrl());
             } catch (IOException e) {
